@@ -17,7 +17,7 @@ def _Gauss(x, center, sigma):
     return ret
 
 # Lorentzian broadening function
-def _LorentzBroad(x, centers, heights, epsilon):
+def LorentzBroad(x, centers, heights, epsilon):
     """
     Applies a Lorentzian broadening to a given data set.
     
@@ -39,13 +39,13 @@ def _LorentzBroad(x, centers, heights, epsilon):
     X = x[np.newaxis, :]
 
     # Compute broadened data set
-    arr = np.multiply(Lorentz(X, C, epsilon), heights[:, np.newaxis])
+    arr = np.multiply(_Lorentz(X, C, epsilon), heights[:, np.newaxis])
     broadened = np.sum(arr, axis = 0)
 
     return broadened
 
 # Gaussian broadening function
-def _GaussBroad(x, centers, heights, sigma):
+def GaussBroad(x, centers, heights, sigma):
     """
     Applies a Gaussian broadening to a given data set.
     
@@ -67,7 +67,7 @@ def _GaussBroad(x, centers, heights, sigma):
     X = x[np.newaxis, :]
 
     # Compute broadened data set
-    arr = np.multiply(Gauss(X, C, sigma), heights[:, np.newaxis])
+    arr = np.multiply(_Gauss(X, C, sigma), heights[:, np.newaxis])
     broadened = np.sum(arr, axis = 0)
 
     return broadened
@@ -104,7 +104,7 @@ def _dssf_lanczos_ave(samples, channel, omega, epsilon):
     cut_samples = [_dict_sort(sample[channel], select = True, min_val = min(omega), max_val = max(omega)) for sample in samples]
 
     # Broaden and average Lanczos data
-    broadened_samples = np.array([_LorentzBroad(omega, cut_sample[0], cut_sample[1], epsilon) for cut_sample in cut_samples]) # Lorentzian broadening should be used for spectral functions
+    broadened_samples = np.array([LorentzBroad(omega, cut_sample[0], cut_sample[1], epsilon) for cut_sample in cut_samples]) # Lorentzian broadening should be used for spectral functions
     average = np.sum(broadened_samples, axis = 0)
     Z = np.real(np.sum(np.array([sample["Z"] for sample in samples]))) # Calculate partition function
     average /= Z
