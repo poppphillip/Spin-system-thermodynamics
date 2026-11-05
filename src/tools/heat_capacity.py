@@ -64,7 +64,7 @@ def _H_n_large_sampling(beta, n, dims, Es, projs):
     return ret
 
 # Calculate the FTLM approximation to the heat capacity, allowing for a large number of Lanczos runs
-def _C_ftlm_large_sampling(beta, dims, Es, projs):
+def C_ftlm_large_sampling(beta, dims, Es, projs):
 
     # Calculate partition function
     Z = H_n_large_sampling(beta, 0, dims, Es, projs)
@@ -79,7 +79,7 @@ def _C_ftlm_large_sampling(beta, dims, Es, projs):
     return C
     
 # Calculate the FTLM approximation to the heat capacity
-def _C_ftlm(beta, Es, Vs, LVs, sectors = False):
+def C_ftlm(beta, Es, Vs, LVs, sectors = False):
 
     # Calculate partition function
     Z = H_n(beta, 0, Es, Vs, LVs, sectors = sectors)
