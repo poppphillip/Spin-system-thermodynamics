@@ -7,7 +7,7 @@ from itertools import product
 
 
 # Construct a 2D rotation matrix
-def R(theta):
+def _R(theta):
     """
     Construct a 2D rotation matrix which rotates a vector counterclockwise about the z-axis by a specified angle.
     Returned is a NumPy array.
@@ -23,7 +23,7 @@ def R(theta):
     return R
 
 # Translate a 2D vector assuming periodic boundary conditions
-def add2D_pbc(a, b, c_1, c_2):
+def _add2D_pbc(a, b, c_1, c_2):
     """
     Perform addition of 2D vectors assuming periodic boundary conditions.
 
@@ -55,7 +55,7 @@ def add2D_pbc(a, b, c_1, c_2):
     return first_uc_cart
 
 # Translate a 3D vector assuming periodic boundary conditions
-def add3D_pbc(a, b, c_1, c_2, c_3):
+def _add3D_pbc(a, b, c_1, c_2, c_3):
     """
     Perform addition of 3D vectors assuming periodic boundary conditions.
 
@@ -124,13 +124,13 @@ def kagome_cluster(n_rows, n_cols, side_length = 1., sublattices = False):
         sl_dict = {"1" : [], "2" : [], "3" : []}
     for i in range(n_rows):
         for j in range(n_cols):
-            sites.append(add2D_pbc((r_0 + (j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2))
-            sites.append(add2D_pbc((r_1 + (j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2))
-            sites.append(add2D_pbc((r_2 + (j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2))
+            sites.append(_add2D_pbc((r_0 + (j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2))
+            sites.append(_add2D_pbc((r_1 + (j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2))
+            sites.append(_add2D_pbc((r_2 + (j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2))
             if sublattices:
-                sl_dict["1"].append(((len(sites) - 3), add2D_pbc(((j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2)))
-                sl_dict["2"].append(((len(sites) - 2), add2D_pbc(((j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2)))
-                sl_dict["3"].append(((len(sites) - 1), add2D_pbc(((j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2)))
+                sl_dict["1"].append(((len(sites) - 3), _add2D_pbc(((j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2)))
+                sl_dict["2"].append(((len(sites) - 2), _add2D_pbc(((j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2)))
+                sl_dict["3"].append(((len(sites) - 1), _add2D_pbc(((j + 1) * a_1 + (i + 1) * a_2), np.array([0., 0.]), v_1, v_2)))
     
     # Find nearest-neighbor site pairs
     pairs = []
@@ -161,28 +161,6 @@ def kagome_cluster(n_rows, n_cols, side_length = 1., sublattices = False):
     else:
         return [np.array(sites), np.array(pairs), v_1, v_2]
 
-# Build a kagome cluster whose number of sites is a multiple of 9 and find its nearest-neighbor pairs
-def kagome_9(n_rows, n_cols, side_length = 1.):
-    """
-    Generate the Cartesian-coordinate site positions of a kagome cluster of given dimensions whose
-    total number of sites is a multiple of 9, and find the corresponding nearest-neighbor site pairs assuming 
-    periodic boundary conditions.
-    
-    Returned is a list containing four NumPy arrays, the first of which contains the site positions as Cartesian ordered pairs, the second of which contains the nearest-neighbor
-    site pairs, and the third and fourth of which contain the superlattice vectors.
-    
-    Parameters
-    ----------
-    n_rows : int
-        Number of rows of 9-site kagome unit cells
-    n_cols : int
-        Number of columns of 9-site kagome unit cells
-    side_length : float
-        Optional, side length of the triangular unit cell in arbitrary units; default value is 1.
-    """
-    # Hexagonal Bravais lattice vectors and superlattice vectors
-    a_1 = 2 * side_length
-
 # Find the reciprocal lattice vectors of a given 2D lattice
 def rlv_2D(a_1, a_2):
     """
@@ -198,14 +176,14 @@ def rlv_2D(a_1, a_2):
         Second lattice vector
     """
     # Construct b_1
-    b_1 = (2 * np.pi / np.dot(a_1, (R(90) @ a_2))) * R(90) @ a_2
+    b_1 = (2 * np.pi / np.dot(a_1, (_R(90) @ a_2))) * _R(90) @ a_2
     # Construct b_2
-    b_2 = (2 * np.pi / np.dot(a_2, (R(90) @ a_1))) * R(90) @ a_1
+    b_2 = (2 * np.pi / np.dot(a_2, (_R(90) @ a_1))) * _R(90) @ a_1
 
     return [np.asarray(b_1), np.asarray(b_2)]
 
 # Find the numerically allowed wavevectors of a given supercell
-def num_q(n_1, n_2, b_1, b_2):
+def _num_q(n_1, n_2, b_1, b_2):
     """
     Find the numerically allowed wavevectors in the first Brillouin zone of the primitive cell of the kagome lattice corresponding to a
     supercell of given dimensions.
@@ -225,8 +203,8 @@ def num_q(n_1, n_2, b_1, b_2):
         Second reciprocal lattice vector 
     """
     # Construct primitive vectors of the first Brillouin zone
-    p_1 = (1 / np.sqrt(3)) * R(-30) @ b_2
-    p_2 = (1 / np.sqrt(3)) * R(30) @ b_1
+    p_1 = (1 / np.sqrt(3)) * _R(-30) @ b_2
+    p_2 = (1 / np.sqrt(3)) * _R(30) @ b_1
 
     # Initialize return list
     q_list = []
@@ -234,14 +212,14 @@ def num_q(n_1, n_2, b_1, b_2):
     # Generate allowed wavevectors
     for i in range(n_1):
         for j in range(n_2):
-            q = add2D_pbc(np.array([0., 0.]), np.asarray((i / n_1) * b_1 + (j / n_2) * b_2), p_1, p_2)
+            q = _add2D_pbc(np.array([0., 0.]), np.asarray((i / n_1) * b_1 + (j / n_2) * b_2), p_1, p_2)
             # q = np.asarray((i / n_1) * b_1 + (j / n_2) * b_2)
             q_list.append(q)
 
     return np.array(q_list)
 
 # Check that a given translation is a symmetry of a given cluster assuming periodic boundary conditions, and return permuted site indices
-def istranssym_pbc(sites, c_1, c_2, vector, round_to = 6):
+def _istranssym_pbc(sites, c_1, c_2, vector, round_to = 6):
     """
     Determine whether a given uniform translation is a symmetry of a given cluster assuming periodic boundary conditions; and if it is,
     return the permutation of site indices defined by the translation. That is, if the translation T is indeed a symmetry of the cluster, then
@@ -267,7 +245,7 @@ def istranssym_pbc(sites, c_1, c_2, vector, round_to = 6):
     site_dict = {tuple(np.round(sites[i], round_to)) : i for i in range(len(sites))}
 
     # Create list of translated site coordinates
-    trans_sites = [tuple(np.round(add2D_pbc(site, vector, c_1, c_2), round_to)) for site in sites]
+    trans_sites = [tuple(np.round(_add2D_pbc(site, vector, c_1, c_2), round_to)) for site in sites]
 
     # Check whether translated sites correspond to an untranslated site
     permutation = np.zeros(len(sites), dtype = int)
