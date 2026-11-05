@@ -10,7 +10,7 @@ from quspin.operators import hamiltonian
 
 
 # Compute the second Lanczos basis required for the two-basis LTLM
-def _second_basis_in_place(beta, H, A, E_1, V_1, LV_1, current_basis, new_basis, dtype = np.complex128):
+def second_basis_in_place(beta, H, A, E_1, V_1, LV_1, current_basis, new_basis, dtype = np.complex128):
     """
     Compute the second Lanczos run required for the two-basis implementation of the LTLM using QuSpin, taking the results of the first
     Lanczos run as input.
@@ -44,7 +44,7 @@ def _second_basis_in_place(beta, H, A, E_1, V_1, LV_1, current_basis, new_basis,
     return (E_2, V_2, LV_2)
 
 # Create a site spin operator in the Hilbert space of the full spin system
-def _S_full(component, n, N, dtype = np.complex128):
+def S_full(component, n, N, dtype = np.complex128):
     """
     Create the spin-1/2 operator of a given Cartesian component at a given site in the Hilbert space of the full spin system.
     Returned is a SciPy sparse matrix.
@@ -81,7 +81,7 @@ def _S_full(component, n, N, dtype = np.complex128):
     return S
 
 # Create a momentum-space spin operator for localized spins-1/2 on a finite lattice with periodic boundary conditions
-def _S_q(component, sites, q, dtype = np.complex128):
+def S_q(component, sites, q, dtype = np.complex128):
     """
     Calculate the given Cartesian component of the momentum-space spin operator corresponding to localized spins-1/2 on a finite lattice with 
     periodic boundary conditions, at a given momentum.
