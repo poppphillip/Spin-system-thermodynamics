@@ -10,7 +10,7 @@ from quspin.operators import hamiltonian
 
 
 # Compute the second Lanczos basis required for the two-basis LTLM
-def second_basis_in_place(beta, H, A, E_1, V_1, LV_1, current_basis, new_basis, dtype = np.complex128):
+def _second_basis_in_place(beta, H, A, E_1, V_1, LV_1, current_basis, new_basis, dtype = np.complex128):
     """
     Compute the second Lanczos run required for the two-basis implementation of the LTLM using QuSpin, taking the results of the first
     Lanczos run as input.
@@ -42,3 +42,64 @@ def second_basis_in_place(beta, H, A, E_1, V_1, LV_1, current_basis, new_basis, 
     E_2, V_2, LV_2 = lanczos_full(H, Ar, evecs.shape[0])
 
     return (E_2, V_2, LV_2)
+
+# Create a site spin operator in the Hilbert space of the full spin system
+def _S_full(component, n, N, dtype = np.complex128):
+    """
+    Create the spin-1/2 operator of a given Cartesian component at a given site in the Hilbert space of the full spin system.
+    Returned is a SciPy sparse matrix.
+
+    Parameters
+    ----------
+    component : str
+        Cartesian component of the desired spin operator; valid values are "x", "y", and "z"
+    n : int
+        Site for which the spin operator is to be created; valid values are {0, ..., N - 1} (see below)
+    N : int
+        Number of spins in the system
+    """
+    # Construct relevant Pauli matrix as a SciPy sparse matrix
+    if component == "x":
+        s = (1 / 2) * sp.sparse.csr_matrix(np.array([[0, 1], [1, 0]]))
+    elif component == "y":
+        s = (1 / 2) * sp.sparse.csr_matrix(np.array([[0, -1j], [1j, 0]]))
+    elif component == "z":
+        s = (1 / 2) * sp.sparse.csr_matrix(np.array([[1, 0], [0, -1]]))
+
+    # Construct the spin operator in the full Hilbert space
+    if n == 0:
+        postfactor = sp.sparse.eye_array(2**(N - 1))
+        S = sp.sparse.kron(s, postfactor).astype(dtype)
+    elif (n > 0) and (n < (N - 1)):
+        prefactor = sp.sparse.eye_array(2**n)
+        postfactor = sp.sparse.eye_array(2**(N - n - 1))
+        S = sp.sparse.kron(prefactor, sp.sparse.kron(s, postfactor)).astype(dtype)
+    else:
+        prefactor = sp.sparse.eye_array(2**(N - 1))
+        S = sp.sparse.kron(prefactor, s).astype(dtype)
+
+    return S
+
+# Create a momentum-space spin operator for localized spins-1/2 on a finite lattice with periodic boundary conditions
+def _S_q(component, sites, q, dtype = np.complex128):
+    """
+    Calculate the given Cartesian component of the momentum-space spin operator corresponding to localized spins-1/2 on a finite lattice with 
+    periodic boundary conditions, at a given momentum.
+    Returned is a SciPy sparse matrix.
+
+    Parameters
+    ----------
+    component : str
+        Cartesian component of the desired spin operator; valid values are "x", "y", and "z"
+    sites : array-like
+        Positions of the spins in Cartesian coordinates
+    q : array-like
+        Crystal momentum at which to calculate the spin operator, given in Cartesian coordinates * (2 \pi / a)
+    """
+    N = len(sites)
+    # Construct momentum-space spin operator as a SciPy sparse matrix
+    S = sp.sparse.csr_matrix((2**N, 2**N), dtype = dtype) # Initialize return array
+    for i in range(N):
+        S += ((np.exp(-1j * np.dot(q, sites[i])) / np.sqrt(N)) * S_full(component, i, N)).astype(dtype)
+    
+    return S
